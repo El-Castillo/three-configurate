@@ -1,9 +1,11 @@
+import "@/shims/preact-reconciler.ts";
+import "@/shims/custom-elements.ts";
+import "@/shims/dom.ts";
 import type { ThreeElements } from "@react-three/fiber";
 import { createRoot, extend, useFrame } from "@react-three/fiber";
 import { useEffect, useRef, useState } from "preact/compat";
 import * as THREE from "three";
 import { IS_BROWSER } from "fresh/runtime";
-
 
 extend({
   Mesh: THREE.Mesh,
@@ -61,7 +63,6 @@ type FiberRenderElement = Parameters<
 >[0];
 
 export default function ThreeScene() {
-  
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rootRef = useRef<ReturnType<typeof createRoot>>();
 
@@ -87,7 +88,6 @@ export default function ThreeScene() {
       rootRef.current = undefined;
     };
   }, []);
-
 
   if (!IS_BROWSER) return <div></div>;
 
