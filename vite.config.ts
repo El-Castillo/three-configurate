@@ -1,23 +1,13 @@
-import { defineConfig } from "vite";
-import { fresh } from "@fresh/plugin-vite";
-import tailwindcss from "@tailwindcss/vite";
-import { fromFileUrl } from "@std/path";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 
-const preactDebugShim = fromFileUrl(
-  new URL("./shims/preact/debug.module.js", import.meta.url),
-);
-
+// https://vite.dev/config/
 export default defineConfig({
-  plugins: [fresh(), tailwindcss()],
-  resolve: {
-    alias: {
-      "react": "preact/compat",
-      "react-dom": "preact/compat",
-      "react-dom/client": "preact/compat/client",
-      "react/jsx-runtime": "preact/jsx-runtime",
-      "react-reconciler": "preact-reconciler",
-      debug: "debug/src/browser.js",
-      "preact/debug": preactDebugShim,
-    },
-  },
-});
+  plugins: [
+    react({
+      babel: {
+        plugins: [['babel-plugin-react-compiler']],
+      },
+    }),
+  ],
+})
