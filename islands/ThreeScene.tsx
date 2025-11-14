@@ -1,24 +1,34 @@
 /// <reference path="../types/react-three-fiber/index.d.ts" />
 import type { ThreeElements } from "@react-three/fiber";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useSignal, useSignalEffect } from "@preact/signals";
+import { useSignalRef } from "@preact/signals/utils";
+import { IS_BROWSER } from "fresh/runtime";
 import * as THREE from "three";
 
 export default function ThreeScene() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [ready, setReady] = useState(false);
+  const canvasRef = useSignalRef<HTMLCanvasElement | null>(null);
+  const ready = useSignal(false);
 
-  useEffect(() => {
+  useSignalEffect(() => {
+    if (!IS_BROWSER) {
+      return;
+    }
+
     let disposed = false;
     let cleanup: (() => void) | undefined;
 
-    const mount = async () => {
+    (async () => {
       try {
-        const { createRoot, extend, useFrame, events } = await import(
-          "@react-three/fiber"
-        );
+        const [{ createRoot, extend, useFrame, events }, compat] = await Promise
+          .all([
+            import("@react-three/fiber"),
+            import("preact/compat"),
+          ]);
         if (disposed || !canvasRef.current) {
           return;
         }
+
+        const { useRef: useCompatRef, useState: useCompatState } = compat;
 
         extend({
           Mesh: THREE.Mesh,
@@ -30,9 +40,9 @@ export default function ThreeScene() {
         });
 
         const Box = (props: ThreeElements["mesh"]) => {
-          const ref = useRef<THREE.Mesh>(null!);
-          const [hovered, setHovered] = useState(false);
-          const [clicked, setClicked] = useState(false);
+          const ref = useCompatRef<THREE.Mesh>(null!);
+          const [hovered, setHovered] = useCompatState(false);
+          const [clicked, setClicked] = useCompatState(false);
 
           useFrame((_, delta) => {
             ref.current.rotation.x += delta;
@@ -82,28 +92,35 @@ export default function ThreeScene() {
         });
         const content = <Scene /> as RootRenderArg;
         root.render(content);
-        setReady(true);
+        ready.value = true;
 
         cleanup = () => {
-          setReady(false);
+          ready.value = false;
           root.unmount();
         };
       } catch (error) {
         console.error("Failed to initialize @react-three/fiber root", error);
       }
-    };
+    })();
 
-    mount();
     return () => {
       disposed = true;
       cleanup?.();
     };
-  }, []);
+  });
+
+  if (!IS_BROWSER) {
+    return (
+      <div class="relative w-full h-[400px]">
+        <canvas class="w-full h-full block" />
+      </div>
+    );
+  }
 
   return (
     <div class="relative w-full h-[400px]">
       <canvas ref={canvasRef} class="w-full h-full block" />
-      {!ready && (
+      {!ready.value && (
         <div class="absolute inset-0 flex items-center justify-center text-gray-500">
           Loading 3D scene...
         </div>
