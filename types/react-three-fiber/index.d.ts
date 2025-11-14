@@ -23,6 +23,21 @@ declare global {
       children?: ReactNode;
     }
   }
+
+  namespace React.JSX {
+    interface IntrinsicElements extends FiberIntrinsicElements {}
+  }
+
+  namespace ReactJSX {
+    interface IntrinsicElements extends FiberIntrinsicElements {}
+  }
+}
+
+declare module "react" {
+  export type ReactNode = ComponentChild;
+  export interface ReactPortal {
+    children?: ReactNode;
+  }
 }
 
 export {};
